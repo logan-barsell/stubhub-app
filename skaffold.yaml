@@ -2,7 +2,7 @@ apiVersion: skaffold/v4beta11
 kind: Config
 build:
   artifacts:
-    - image: logandevs/auth
+    - image: us.gcr.io/stubhub-app-dev-430119/auth
       context: auth
       sync:
         manual:
@@ -10,8 +10,8 @@ build:
             dest: .
       docker:
         dockerfile: Dockerfile
-  local:
-    push: false
+  googleCloudBuild:
+    projectId: stubhub-app-dev-430119
 manifests:
   rawYaml:
     - ./infra/k8s/*
