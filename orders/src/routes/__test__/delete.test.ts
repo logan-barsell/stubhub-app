@@ -2,6 +2,7 @@ import request from 'supertest';
 import { app } from '../../app';
 import { Ticket } from '../../models/ticket';
 import { OrderStatus } from '@stubblyhubbly/common';
+import { natsWrapper } from '../../nats-wrapper';
 
 it('deletes/cancels the order', async () => {
   // create a ticket
@@ -36,4 +37,29 @@ it('deletes/cancels the order', async () => {
   }
 });
 
-it.todo('emits an order cancelled event');
+it('emits an order cancelled event', async () => {
+  // create a ticket
+  const ticket = Ticket.build({
+    title: 'concert',
+    price: 20,
+  });
+  await ticket.save();
+  // make a request to build an order with this ticket
+  const cookie = global.signup();
+  if (cookie) {
+    const { body: order } = await request(app)
+      .post('/api/orders')
+      .set('Cookie', cookie)
+      .send({ ticketId: ticket.id })
+      .expect(201);
+    // make a request to delete the order
+    const { body: deleted } = await request(app)
+      .delete(`/api/orders/${order.id}`)
+      .set('Cookie', cookie)
+      .send()
+      .expect(204);
+    expect(natsWrapper.client.publish).toHaveBeenCalled();
+  } else {
+    fail('Signup did not provide a cookie');
+  }
+});
