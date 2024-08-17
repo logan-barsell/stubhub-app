@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: client
-          image: us.gcr.io/stubhub-app-dev-430119/client
+          image: logandevs/client:latest
           env:
             - name: JWT_KEY
               valueFrom:
