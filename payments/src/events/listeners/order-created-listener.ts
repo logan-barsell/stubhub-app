@@ -1,19 +1,20 @@
 import { Listener, OrderCreatedEvent, Subjects } from '@stubblyhubbly/common';
-import { queueGroupName } from './queue-group-name';
+import { queueGroupName } from './queueGroupName';
 import { Message } from 'node-nats-streaming';
-import { expirationQueue } from '../../queues/expiration-queues';
+import { Order } from '../../models/order';
 
 export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
   readonly subject = Subjects.OrderCreated;
   queueGroupName = queueGroupName;
   async onMessage(data: OrderCreatedEvent['data'], msg: Message) {
-    const delay = new Date(data.expiresAt).getTime() - new Date().getTime();
-    await expirationQueue.add(
-      { orderId: data.id },
-      {
-        delay,
-      }
-    );
+    const order = Order.build({
+      id: data.id,
+      price: data.ticket.price,
+      status: data.status,
+      userId: data.userId,
+      version: data.version,
+    });
+    await order.save();
     msg.ack();
   }
 }
